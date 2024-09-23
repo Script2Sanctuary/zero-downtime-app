@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zero-downtime-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: zero-downtime-app
+  template:
+    metadata:
+      labels:
+        app: zero-downtime-app
+    spec:
+      containers:
+      - name: zero-downtime-app
+        # image: zero-downtime-app:v1
+        # image: zero-downtime-app:v2
+        image: zero-downtime-app:v3
+        ports:
+        - containerPort: 3000
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zero-downtime-service
+spec:
+  selector:
+    app: zero-downtime-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+  type: LoadBalancer
